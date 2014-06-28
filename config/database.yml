@@ -1,0 +1,21 @@
+default: &default
+  adapter: mysql2
+  encoding: utf8
+  pool: 5
+  username: butler-admin
+  password: letmein123
+  host: localhost
+
+development:
+  <<: *default
+  database: butler_development
+
+test:
+  <<: *default
+  database: butler_test
+
+production:
+  <<: *default
+  database: butler_production
+  username: butler
+  password: <%= ENV['BUTLER_DATABASE_PASSWORD'] %>
