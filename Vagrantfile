@@ -1,0 +1,40 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+
+  config.vm.provision :shell, :path => "puppet/puppet-install.sh"
+
+  config.vm.provision :puppet, :module_path => "puppet/modules" do |puppet|
+    puppet.manifests_path = "puppet/manifests"
+    puppet.manifest_file = "site.pp"
+    puppet.options = ["--verbose"]
+  end
+
+  config.vm.define :ffsdevweb01 do |config|
+
+    box_name = 'ffsdevweb01'
+    host_name = "local.#{box_name}.com"
+
+    config.vm.provider :virtualbox do |vb|
+      vb.name = "butler"
+      vb.customize ["modifyvm", :id,
+                   "--name", box_name,
+                   "--memory", "1024",
+                   "--cpus", "2",
+                   "--nictype1", "Am79C973",
+                   "--nictype2", "Am79C973",
+                   "--natdnshostresolver1", "on"]
+    end
+
+    config.vm.box = "hashicorp/precise64"
+
+    config.vm.hostname = host_name
+    config.vm.network :private_network, ip: "33.33.33.4"
+    config.vm.network :forwarded_port, guest: 80, host: 3000, :auto => true
+
+    config.vm.synced_folder "..", "/home/vagrant/apps", :nfs => true
+
+  end
+
+end
