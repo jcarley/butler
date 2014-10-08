@@ -1,0 +1,14 @@
+pidfile "/app/tmp/pids/puma.pid"
+state_path "/app/tmp/pids/puma.state"
+bind 'tcp://127.0.0.1:9292'
+environment 'ENV[]'
+
+threads 5, 16
+
+# Use the following curl request to get stats about puma
+# curl 127.0.0.1:<%= @control_app_port %>?token=foo
+activate_control_app 'tcp://127.0.0.1:<%= @control_app_port %>', { auth_token: 'foo' }
+
+on_restart do
+ ActiveRecord::Base.connection_pool.disconnect!
+end

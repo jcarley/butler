@@ -4,6 +4,8 @@ class roles::www::webserver (
   $rails_env = 'development',
 ){
 
+  include puma::service
+
   anchor { "roles::www::webserver::being": } ->
 
   apt::ppa { ['ppa:chris-lea/node.js', 'ppa:nginx/stable']: } ->
@@ -22,9 +24,10 @@ class roles::www::webserver (
 
   class { 'nginx': }
 
-  class { "puma::init":
+  class { 'puma::package':
     run_as_user => $run_as_user,
     rails_env   => $rails_env,
+    notify      => Service['puma-manager'],
   }
 
   anchor { "roles::www::webserver::end": }

@@ -20,9 +20,13 @@ exec /bin/bash <<EOT
 
   source /home/<%= @run_as_user %>/.bashenv
 
+  if [ -f /home/<%= @run_as_user %>/.javarc ]; then
+    source /home/<%= @run_as_user %>/.javarc
+  fi
+
   logger -t puma "Starting server: $app"
 
   cd $app
-  RAILS_ENV=<%= @rails_env %> exec bundle exec puma -C config/puma.rb
+  exec bundle exec puma -C config/puma.rb
 EOT
 end script

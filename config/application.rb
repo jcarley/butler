@@ -30,6 +30,12 @@ module Butler
       Devise::SessionsController.layout "login"
     end
 
+    config.paths.add "#{Rails.root}/app/api", glob: "**/*.rb"
+    # config.autoload_paths += %W(#{Rails.root}/app)
+    config.autoload_paths += Dir[Rails.root.join('app', 'api', '*')]
+
+    config.middleware.insert_before Rack::Sendfile, 'ApiEngine'
+
     # Settings in config/environments/* take precedence over those specified here.
     # Application configuration should go into files in config/initializers
     # -- all .rb files in that directory are automatically loaded.

@@ -13,21 +13,26 @@ gem 'devise'
 gem 'devise_invitable'
 gem 'rolify'
 gem 'jquery-rails'
+gem 'grape'
+gem 'grape-entity'
+gem 'grape-swagger', :github => 'tim-vandecasteele/grape-swagger'
+gem 'sidekiq'
 
 group :development do
   gem 'cheat'
   gem "pry"
   gem "pry-doc"
   gem "pry-rails"
-  gem "pry-debugger"
 end
 
 group :development, :test do
   gem "rspec-rails"
   gem 'faker'
-  gem "meta_request"
-  gem "better_errors"
+  # gem "meta_request"
+  # gem "better_errors"
   gem "awesome_print"
+  gem "teaspoon"
+  gem 'jasmine-rails'
 end
 
 group :test do

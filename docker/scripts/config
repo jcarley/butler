@@ -1,0 +1,5 @@
+volume=/home/vagrant/apps/butler:/app
+links='--link mysql_cont_1:db'
+container=butler:latest
+port=3000:3000
+name=rails_cont_1

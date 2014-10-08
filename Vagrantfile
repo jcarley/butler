@@ -1,40 +1,39 @@
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-Vagrant.configure("2") do |config|
+$setup = <<SCRIPT
+# Stop and remove any existing containers
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
 
-  config.vm.provision :shell, :path => "puppet/puppet-install.sh"
+make -f /home/vagrant/apps/butler/docker/extras/Makefile
 
-  config.vm.provision :puppet, :module_path => "puppet/modules" do |puppet|
-    puppet.manifests_path = "puppet/manifests"
-    puppet.manifest_file = "site.pp"
-    puppet.options = ["--verbose"]
+/home/vagrant/apps/butler/docker/tools/build.sh
+SCRIPT
+
+$start = <<SCRIPT
+docker stop $(docker ps -a -q)
+docker rm $(docker ps -a -q)
+/home/vagrant/apps/butler/docker/tools/run.sh
+SCRIPT
+
+VAGRANTFILE_API_VERSION = "2"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
+  config.vm.provider :vmware_fusion do |v|
+    config.vm.box = "jcarley/ubuntu1404-docker-puppet"
+    v.vmx["memsize"] = "2048"
+    v.vmx["numvcpus"] = "2"
   end
 
-  config.vm.define :ffsdevweb01 do |config|
+  config.vm.network :private_network, ip: "33.33.33.4"
+  config.vm.network :forwarded_port, guest: 3000, host: 3000, :auto => true
+  config.vm.network :forwarded_port, guest: 80, host: 80, :auto => true
 
-    box_name = 'ffsdevweb01'
-    host_name = "local.#{box_name}.com"
+  config.vm.synced_folder ".", "/home/vagrant/apps/butler"
 
-    config.vm.provider :virtualbox do |vb|
-      vb.name = "butler"
-      vb.customize ["modifyvm", :id,
-                   "--name", box_name,
-                   "--memory", "1024",
-                   "--cpus", "2",
-                   "--nictype1", "Am79C973",
-                   "--nictype2", "Am79C973",
-                   "--natdnshostresolver1", "on"]
-    end
+  config.vm.provision "shell", inline: $setup
 
-    config.vm.box = "hashicorp/precise64"
-
-    config.vm.hostname = host_name
-    config.vm.network :private_network, ip: "33.33.33.4"
-    config.vm.network :forwarded_port, guest: 80, host: 3000, :auto => true
-
-    config.vm.synced_folder "..", "/home/vagrant/apps", :nfs => true
-
-  end
-
+  config.vm.provision "shell", run: "always", inline: $start
 end

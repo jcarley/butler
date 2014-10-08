@@ -10,14 +10,45 @@ class roles::www::webapp(
 ) {
 
   $upstream_port = 9292
+  $control_app_port = 6464
   $application_home = "$base_app_home/$application_name"
 
-  puma::app { "install_app $application_home":
-    run_as_user    => $run_as_user,
-    app_path       => $application_home,
-    port           => $upstream_port,
-    ruby_home_path => $ruby_home_path,
+  if member(['development', 'test'], $rails_env) {
+    $bundle_opts = "--jobs 2"
+  } else {
+    $bundle_opts = "--binstubs --path vendor/bundle --jobs 2 --without development test >> /home/${run_as_user}/bundle.log 2>&1"
   }
+
+  anchor { 'roles::www::webapp::begin': } ->
+
+  exec {"run bundle ${$application_home}":
+    command     => "${ruby_home_path}/bundle install ${bundle_opts}",
+    cwd         => $application_home,
+    path        => [$ruby_home_path, $path, "${path}:/bin:/usr/bin"],
+    user        => $run_as_user,
+    group       => $run_as_user,
+    timeout     => 0,
+  } ->
+
+  rake::run { 'submission tmp create':
+    tasks             => "tmp:clear tmp:create",
+    working_directory => $submission_app_home ,
+    ruby_home_path    => $ruby_home_path,
+    run_as_user       => $run_as_user,
+    rails_env         => $rails_env,
+    notify            => [Service['puma-manager'], Service['sidekiq-manager']],
+  } ->
+
+  puma::app { "install_app ${$application_home}":
+    run_as_user      => $run_as_user,
+    app_path         => $application_home,
+    port             => $upstream_port,
+    control_app_port => $control_app_port,
+    ruby_home_path   => $ruby_home_path,
+  } ->
+
+
+  anchor { 'roles::www::webapp::end': }
 
   nginx::resource::upstream { "${application_name}_rack_app":
     ensure  => present,

@@ -2,9 +2,9 @@ default: &default
   adapter: mysql2
   encoding: utf8
   pool: 5
-  username: butler-admin
-  password: letmein123
-  host: localhost
+  username: root
+  password:
+  host: <%= ENV['DB_PORT_3306_TCP_ADDR'] %>
 
 development:
   <<: *default
